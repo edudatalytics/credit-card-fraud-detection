@@ -15,21 +15,27 @@ st.set_page_config(
     layout="centered"
 )
 
+import joblib
+import streamlit as st
+
 # ================================
 # 3️⃣ CONSTANTES
 # ================================
 THRESHOLD_PRODUCAO = 0.005
-MODEL_PATH = Path("models/modelo_fraude_producao.pkl")
+MODEL_PATH = "models/modelo_fraude_producao.pkl"
 
 # ================================
 # 4️⃣ LOAD DO MODELO
 # ================================
 @st.cache_resource
 def load_model():
-    if not MODEL_PATH.exists():
-        st.error("❌ Modelo não encontrado na pasta models/")
+    try:
+        model = joblib.load(MODEL_PATH)
+        return model
+    except Exception as e:
+        st.error(f"❌ Modelo não encontrado na pasta models/ \nErro: {e}")
         st.stop()
-    return joblib.load(MODEL_PATH)
+
 
 model = load_model()
 
