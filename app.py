@@ -85,22 +85,22 @@ if st.button("🔍 Analisar Transação"):
     # DataFrame na ordem correta
     input_data = pd.DataFrame([input_dict])[model.feature_names_in_]
 
-    proba_fraude = model.predict_proba(input_data)[:, 1][0]
-    is_fraud = proba_fraude >= THRESHOLD_PRODUCAO
+    proba = model.predict_proba(input_data)[0][1]  # probabilidade da classe de fraude
+pred = 1 if proba >= THRESHOLD_PRODUCAO else 0
 
-    st.divider()
-    st.subheader("📊 Resultado da Análise")
+st.write(f"🔢 Probabilidade estimada de fraude: **{proba:.2%}**")
 
-    st.metric(
-        label="Probabilidade de Fraude",
-        value=f"{proba_fraude:.2%}"
-    )
+if pred == 1:
+    st.error("⚠️ Transação suspeita! Existe chance de ser fraude.")
+else:
+    st.success("🛡️ Transação normal. Sem sinais de fraude.")
 
-    if is_fraud:
-        st.error("🚨 **Transação classificada como FRAUDE**")
-    else:
-        st.success("✅ **Transação classificada como LEGÍTIMA**")
-
+if proba < 0.01:
+    st.success("🟢 Baixíssimo risco")
+elif proba < 0.05:
+    st.warning("🟡 Risco moderado")
+else:
+    st.error("🔴 Alto risco de fraude")
     st.caption(f"Threshold utilizado: {THRESHOLD_PRODUCAO}")
 
 # ================================
