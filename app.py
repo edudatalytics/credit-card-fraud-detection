@@ -84,8 +84,7 @@ if st.button("🔍 Analisar Transação"):
 
     # DataFrame na ordem correta
     input_data = pd.DataFrame([input_dict])[model.feature_names_in_]
-
-    proba = model.predict_proba(input_data)[0][1]  # probabilidade da classe de fraude
+proba = model.predict_proba(input_data)[0][1]  # probabilidade da classe de fraude
 pred = 1 if proba >= THRESHOLD_PRODUCAO else 0
 
 st.write(f"🔢 Probabilidade estimada de fraude: **{proba:.2%}**")
