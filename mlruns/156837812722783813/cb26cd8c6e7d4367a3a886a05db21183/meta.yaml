@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/156837812722783813/cb26cd8c6e7d4367a3a886a05db21183/artifacts
+end_time: 1768003695933
+entry_point_name: ''
+experiment_id: '156837812722783813'
+lifecycle_stage: active
+run_id: cb26cd8c6e7d4367a3a886a05db21183
+run_name: LogReg - class_weight | thr=0.02
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1768003695812
+status: 3
+tags: []
+user_id: User

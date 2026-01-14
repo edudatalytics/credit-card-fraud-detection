@@ -1,0 +1,10 @@
+artifact_location: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/models/m-7c45dcb1f0b24c95ac2ed3cb56a73def/artifacts
+creation_timestamp: 1767929237466
+experiment_id: '0'
+last_updated_timestamp: 1767929242407
+model_id: m-7c45dcb1f0b24c95ac2ed3cb56a73def
+model_type: null
+name: model
+source_run_id: d9d6d84c568d4d888cdd6d06e0c66278
+status: 2
+status_message: null

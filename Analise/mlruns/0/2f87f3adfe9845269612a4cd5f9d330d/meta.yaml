@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/2f87f3adfe9845269612a4cd5f9d330d/artifacts
+end_time: 1767929263637
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2f87f3adfe9845269612a4cd5f9d330d
+run_name: RF - Class_weight
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767929258162
+status: 3
+tags: []
+user_id: User

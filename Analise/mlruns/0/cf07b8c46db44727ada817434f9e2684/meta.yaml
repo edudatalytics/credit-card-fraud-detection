@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/cf07b8c46db44727ada817434f9e2684/artifacts
+end_time: 1767929247468
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: cf07b8c46db44727ada817434f9e2684
+run_name: LogReg- class_weight
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767929242431
+status: 3
+tags: []
+user_id: User

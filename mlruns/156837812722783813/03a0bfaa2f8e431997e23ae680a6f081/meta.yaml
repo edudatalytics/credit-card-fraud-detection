@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/156837812722783813/03a0bfaa2f8e431997e23ae680a6f081/artifacts
+end_time: 1767932080214
+entry_point_name: ''
+experiment_id: '156837812722783813'
+lifecycle_stage: active
+run_id: 03a0bfaa2f8e431997e23ae680a6f081
+run_name: Gradient Boosting
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767932075235
+status: 3
+tags: []
+user_id: User

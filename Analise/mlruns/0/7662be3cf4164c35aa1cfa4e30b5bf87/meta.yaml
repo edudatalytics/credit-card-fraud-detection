@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/7662be3cf4164c35aa1cfa4e30b5bf87/artifacts
+end_time: 1767928655284
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 7662be3cf4164c35aa1cfa4e30b5bf87
+run_name: Logistic Regression — class_weight
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767928650247
+status: 3
+tags: []
+user_id: User

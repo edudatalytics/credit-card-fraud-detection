@@ -1,114 +1,89 @@
-# ================================
-# 1️⃣ IMPORTS
-# ================================
 import streamlit as st
-import joblib
-import pandas as pd
 
-# ================================
-# 2️⃣ CONFIGURAÇÃO DA PÁGINA
-# ================================
+from predict import predict_fraud
+
+# =========================
+# CONFIGURAÇÃO DA PÁGINA
+# =========================
+
 st.set_page_config(
-    page_title="Detector de Fraude",
+    page_title="Detector de Fraude em Cartão de Crédito",
     page_icon="🚨",
     layout="centered"
 )
 
-# ================================
-# 3️⃣ CONSTANTES
-# ================================
-THRESHOLD_PRODUCAO = 0.005
-MODEL_PATH = "models/modelo_fraude_producao.pkl"
+# =========================
+# TÍTULO
+# =========================
 
-# ================================
-# 4️⃣ LOAD DO MODELO
-# ================================
-@st.cache_resource
-def load_model():
-    try:
-        model = joblib.load(MODEL_PATH)
-        return model
-    except Exception as e:
-        st.error(f"❌ Modelo não encontrado na pasta models/ \nErro: {e}")
-        st.stop()
-
-model = load_model()
-
-# ================================
-# 5️⃣ INTERFACE
-# ================================
 st.title("🚨 Detector de Fraude em Cartão de Crédito")
 
-st.markdown("""
-Este aplicativo utiliza **Machine Learning** para detectar **transações suspeitas**  
-com base em dados históricos de fraude.
+st.markdown(
+    """
+    Este aplicativo utiliza um modelo de **Machine Learning**
+    treinado para detectar **transações fraudulentas**.
 
-👉 Preencha os dados da transação abaixo.
-""")
+    O modelo foi selecionado com base em **recall, precision,
+    custo operacional e ajuste de threshold**.
+    """
+)
 
 st.divider()
+
+# =========================
+# INPUTS DO USUÁRIO
+# =========================
 
 st.subheader("📥 Dados da Transação")
 
 time = st.number_input(
-    "⏱ Tempo desde a primeira transação (segundos)",
+    "Tempo desde a primeira transação (segundos)",
     min_value=0.0,
     value=10000.0
 )
 
 amount = st.number_input(
-    "💰 Valor da transação (R$)",
+    "Valor da transação",
     min_value=0.0,
     value=100.0
 )
 
-# ================================
-# 6️⃣ PREDIÇÃO
-# ================================
+# =========================
+# BOTÃO DE PREDIÇÃO
+# =========================
+
 if st.button("🔍 Analisar Transação"):
-    input_dict = {}
 
-    # Loop pelas features do modelo
-    for feature in model.feature_names_in_:
-        if feature == "Time":
-            input_dict[feature] = time
-        elif feature == "Amount":
-            input_dict[feature] = amount
-        else:
-            input_dict[feature] = 0.0  # outras variáveis V1–V28
+    input_dict = {
+        "Time": time,
+        "Amount": amount
+    }
 
-    # DataFrame na ordem correta
-    input_data = pd.DataFrame([input_dict])[model.feature_names_in_]
+    result = predict_fraud(input_dict)
 
-    # Probabilidade e classificação
-    proba = model.predict_proba(input_data)[0][1]
-    pred = 1 if proba >= THRESHOLD_PRODUCAO else 0
+    prob_fraude = result.loc[0, "prob_fraude"]
+    fraude_predita = result.loc[0, "fraude_predita"]
 
-    # Probabilidade
-    st.write(f"🔢 Probabilidade estimada de fraude: **{proba:.2%}**")
+    st.divider()
+    st.subheader("📊 Resultado da Análise")
 
-    # Resultado final
-    if pred == 1:
-        st.error("⚠️ Transação suspeita!")
+    st.metric(
+        label="Probabilidade de Fraude",
+        value=f"{prob_fraude:.2%}"
+    )
+
+    if fraude_predita == 1:
+        st.error("🚨 **Transação classificada como FRAUDE**")
     else:
-        st.success("🛡️ Transação normal.")
+        st.success("✅ **Transação classificada como LEGÍTIMA**")
 
-    # Semáforo
-    if proba < 0.01:
-        st.success("🟢 Baixíssimo risco")
-    elif proba < 0.05:
-        st.warning("🟡 Risco moderado")
-    else:
-        st.error("🔴 Alto risco de fraude")
+    st.caption("Threshold de decisão: 0.1")
 
-    st.caption(f"⚙️ Threshold utilizado: {THRESHOLD_PRODUCAO}")
+# =========================
+# RODAPÉ
+# =========================
 
-# ================================
-# 7️⃣ RODAPÉ
-# ================================
 st.divider()
 st.caption(
-    "Projeto desenvolvido para fins educacionais • Ciência de Dados • Machine Learning"
+    "Projeto educacional • Ciência de Dados • Machine Learning • MLflow"
 )
-
-

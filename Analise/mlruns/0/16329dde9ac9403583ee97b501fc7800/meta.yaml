@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/16329dde9ac9403583ee97b501fc7800/artifacts
+end_time: 1767927683986
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 16329dde9ac9403583ee97b501fc7800
+run_name: Random Forest — class_weight
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767927678460
+status: 3
+tags: []
+user_id: User

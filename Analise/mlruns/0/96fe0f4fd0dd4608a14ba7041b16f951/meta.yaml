@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/96fe0f4fd0dd4608a14ba7041b16f951/artifacts
+end_time: 1767929258152
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 96fe0f4fd0dd4608a14ba7041b16f951
+run_name: RF - Baseline
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767929252643
+status: 3
+tags: []
+user_id: User

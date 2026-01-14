@@ -1,0 +1,14 @@
+artifact_uri: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/57cbdd4b612c474e9b1305c16a259195/artifacts
+end_time: 1767929252633
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 57cbdd4b612c474e9b1305c16a259195
+run_name: logReg - SMOTE
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767929247478
+status: 3
+tags: []
+user_id: User

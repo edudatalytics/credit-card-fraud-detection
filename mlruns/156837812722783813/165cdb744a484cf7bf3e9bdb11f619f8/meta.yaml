@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/156837812722783813/165cdb744a484cf7bf3e9bdb11f619f8/artifacts
+end_time: 1768349468791
+entry_point_name: ''
+experiment_id: '156837812722783813'
+lifecycle_stage: active
+run_id: 165cdb744a484cf7bf3e9bdb11f619f8
+run_name: LogReg - SMOTE
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1768349468745
+status: 4
+tags: []
+user_id: User

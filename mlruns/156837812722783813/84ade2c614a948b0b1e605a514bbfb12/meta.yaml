@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/156837812722783813/84ade2c614a948b0b1e605a514bbfb12/artifacts
+end_time: 1767933535969
+entry_point_name: ''
+experiment_id: '156837812722783813'
+lifecycle_stage: active
+run_id: 84ade2c614a948b0b1e605a514bbfb12
+run_name: RF - SMOTE | thr=0.001
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1767933535852
+status: 3
+tags: []
+user_id: User

@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/156837812722783813/cd604949b47b4ab7bd9ea5c2c598d2c6/artifacts
+end_time: 1768018723252
+entry_point_name: ''
+experiment_id: '156837812722783813'
+lifecycle_stage: active
+run_id: cd604949b47b4ab7bd9ea5c2c598d2c6
+run_name: RF - class_weight | thr=0.1
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1768018723122
+status: 3
+tags: []
+user_id: User

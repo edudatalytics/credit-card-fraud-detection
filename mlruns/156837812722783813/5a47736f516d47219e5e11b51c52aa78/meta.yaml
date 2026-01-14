@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/156837812722783813/5a47736f516d47219e5e11b51c52aa78/artifacts
+end_time: 1768003826344
+entry_point_name: ''
+experiment_id: '156837812722783813'
+lifecycle_stage: active
+run_id: 5a47736f516d47219e5e11b51c52aa78
+run_name: XGBoost - Challenger | thr=0.005
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1768003826220
+status: 3
+tags: []
+user_id: User

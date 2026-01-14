@@ -1,0 +1,22 @@
+artifact_path: file:///c:/Users/User/Desktop/ANALISE%20DE%20FRAUDES%20DE%20CRED/Analise/mlruns/0/models/m-47ec860acf914fb3aeb6f34aa5c88a16/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.13.5
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.6.1
+mlflow_version: 3.6.0
+model_id: m-47ec860acf914fb3aeb6f34aa5c88a16
+model_size_bytes: 954148
+model_uuid: m-47ec860acf914fb3aeb6f34aa5c88a16
+prompts: null
+run_id: 9b81f856cf434e2c8c91939c75df65f6
+utc_time_created: '2026-01-09 03:17:35.863184'
