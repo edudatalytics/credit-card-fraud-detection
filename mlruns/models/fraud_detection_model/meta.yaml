@@ -1,8 +1,0 @@
-aliases:
-  Production: '1'
-creation_timestamp: 1768023631752
-deployment_job_id: null
-deployment_job_state: null
-description: ''
-last_updated_timestamp: 1768358824299
-name: fraud_detection_model
