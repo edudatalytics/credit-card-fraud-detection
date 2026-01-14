@@ -1,6 +1,6 @@
 # 🚨 Detecção de Fraudes em Cartões de Crédito
 
-Projeto de **Machine Learning end-to-end** para detecção de transações fraudulentas,
+Projeto de **Machine Learning ponta a ponta** para detecção de transações fraudulentas,
 com foco em **dados desbalanceados**, **ajuste de threshold baseado em custo operacional**
 e **deploy com MLflow + Streamlit**.
 
@@ -9,7 +9,7 @@ e **deploy com MLflow + Streamlit**.
 ## 📌 Objetivo
 Desenvolver um modelo capaz de identificar transações fraudulentas,
 minimizando perdas financeiras e falsos positivos,
-utilizando boas práticas de ciência de dados e MLOps.
+utilizando boas práticas de **Ciência de Dados** e **MLOps**.
 
 ---
 
@@ -43,10 +43,11 @@ utilizando boas práticas de ciência de dados e MLOps.
 ## 🏆 Modelo Final (Produção)
 - **Modelo:** Regressão Logística com `class_weight=balanced`
 - **Threshold:** `0.1`
-- Escolhido por apresentar melhor equilíbrio entre:
-  - Recall elevado
-  - Menor custo operacional
-  - Estabilidade e interpretabilidade
+
+Escolhido por apresentar melhor equilíbrio entre:
+- Recall elevado
+- Menor custo operacional
+- Estabilidade e interpretabilidade
 
 ---
 
@@ -66,3 +67,24 @@ Interface interativa para simular transações e obter:
 Para rodar o app:
 ```bash
 streamlit run app.py
+
+🛠️ Tecnologias
+
+Python
+
+Scikit-learn
+
+Imbalanced-learn
+
+XGBoost
+
+MLflow
+
+Streamlit
+
+Pandas / NumPy / Matplotlib
+
+
+👤 Autor
+
+Projeto desenvolvido para fins educacionais e portfólio em Ciência de Dados.
