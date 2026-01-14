@@ -15,7 +15,8 @@ import mlflow.sklearn
 # Scikit-learn
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
+from imblearn.pipeline import Pipeline
+
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
@@ -39,7 +40,7 @@ from xgboost import XGBClassifier
 # Métrica essencial para fraude
 from sklearn.metrics import average_precision_score
 
-
+#%%
 MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
 EXPERIMENT_NAME = "credit-card-fraud-detection"
 
@@ -292,6 +293,7 @@ mlflow_models = {
 }
 
 #%% 
+
 # Executando experimentos MLflow com diferentes thresholds
 for model_name, model in mlflow_models.items():
     run_mlflow_experiment_with_thresholds(
@@ -326,6 +328,11 @@ models_pr = {
     "LogReg - class_weight": pipe_log_bal,
     "XGBoost": pipe_xgb
 }
+
+# FIT explícito dos modelos usados em gráfico
+pipe_log_bal.fit(X_train, y_train)
+pipe_xgb.fit(X_train, y_train)
+
 #%% 
 # Plotando a curva Precision × Recall para os modelos selecionados
 plot_precision_recall(models_pr, X_test, y_test)
@@ -454,56 +461,17 @@ with mlflow.start_run(run_name="Production | LogReg class_weight"):
     plt.savefig("precision_recall.png")
     mlflow.log_artifact("precision_recall.png", artifact_path="plots")
 
+    ARTIFACTS_DIR = Path("artifacts")
+ARTIFACTS_DIR.mkdir(exist_ok=True)
 
-# Analisando o custo operacional,
-# o modelo de Regressão Logística com class_weight='balanced'
+feature_columns = X.columns.tolist()
 
-#%% FINAL MODEL TRAINING
-# Treinamento final do modelo escolhido para produção:
-#pipe_log_bal.fit(X_train, y_train)
+joblib.dump(
+    feature_columns,
+    ARTIFACTS_DIR / "feature_columns.pkl"
+)
 
-
-# Apesar do bom desempenho inicial, o Random Forest apresentou alta sensibilidade ao threshold,
-# tornando-o menos adequado para produção
-
-# Modelo final: Regressão Logística com class_weight='balanced'
-# Threshold inicial: 0.005
-# Recall máximo (não perder fraude)
-
-#%% SAVE MODEL
-#import joblib
-#from pathlib import Path
-
-# Raiz do projeto
-#BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Pasta models (na raiz)
-#MODEL_DIR = BASE_DIR / "models"
-#MODEL_DIR.mkdir(exist_ok=True)
-
-# Caminho final do modelo
-#MODEL_PATH = MODEL_DIR / "modelo_fraude_producao.pkl"
-
-# Salvando o pipeline treinado
-#joblib.dump(pipe_log_bal, MODEL_PATH)
-
-#print(f"✅ Modelo salvo com sucesso em: {MODEL_PATH}")
+print("✅ feature_columns.pkl salvo com sucesso")
 
 
-# Salvando o modelo treinado para uso em produção
 
-#%% LOAD MODEL
-# Carregando o modelo salvo para verificação
-#from pathlib import Path
-#import joblib
-
-# Diretório raiz do projeto
-#BASE_DIR = Path(__file__).resolve().parent.parent
-
-#MODEL_PATH = BASE_DIR / "models" / "modelo_fraude_producao.pkl"
-
-#model = joblib.load(MODEL_PATH)
-
-#print("✅ Modelo carregado com sucesso!")
-#print(model)
-# Modelo carregado com sucesso para uso em produção
