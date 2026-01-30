@@ -1,36 +1,152 @@
-# ===============================
-# Ambientes virtuais
-# ===============================
-venv/
-.env/
+# ============================================================
+# .gitignore - Projeto de Detecção de Fraude
+# ============================================================
 
-# ===============================
-# Cache Python
-# ===============================
+# ==================== PYTHON ====================
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+*.so
+_pycache_/
 
-# ===============================
-# Dados e arquivos grandes
-# ===============================
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# ==================== MLFLOW ====================
+# MLflow tracking
+mlruns/
+.trash/
+
+# MLflow artifacts (muito grande)
+mlartifacts/
+
+# ==================== DADOS ====================
+# Dataset (muito grande - 150MB)
+data/creditcard.csv
+data/*.csv
 *.csv
 
-# ===============================
-# Modelos treinados (se quiser versionar, remova esta linha)
-# ===============================
-# *.pkl
+# IMPORTANTE: Manter apenas .gitkeep nos diretórios
+!data/.gitkeep
 
-# ===============================
-# Streamlit
-# ===============================
-.streamlit/
+# ==================== MODELOS ====================
+# Modelos treinados (podem ser grandes)
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.sav
 
-# ===============================
-# Sistema
-# ===============================
+# Manter apenas os essenciais
+!artifacts/feature_columns.pkl
+
+# ==================== PLOTS/IMAGENS ====================
+# Gráficos gerados (podem ser recriados)
+plots/*.png
+plots/*.jpg
+plots/*.jpeg
+plots/*.pdf
+
+# Manter apenas .gitkeep
+!plots/.gitkeep
+
+# ==================== RESULTADOS ====================
+# CSVs de resultados
+model_comparison_results.csv
+fraud_analysis_*.csv
+results_*.csv
+
+# ==================== IDE/EDITOR ====================
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# ==================== SISTEMA OPERACIONAL ====================
+# MacOS
 .DS_Store
-Thumbs.db
+.AppleDouble
+.LSOverride
 
-# Modelos treinados
-models/*.pkl
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ==================== LOGS ====================
+# Logs gerais
+*.log
+logs/
+*.out
+
+# ==================== TEMPORÁRIOS ====================
+# Arquivos temporários
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Cache
+.cache/
+*.cache
+
+# ==================== CREDENCIAIS ====================
+# Nunca versionar credenciais!
+.env
+.env.local
+*.pem
+*.key
+credentials.json
+secrets.yaml
+
+# ==================== OUTROS ====================
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# Backup files
+*.bak
+*.backup
+*_backup.*
+*_old.*

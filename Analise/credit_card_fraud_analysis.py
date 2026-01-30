@@ -1,7 +1,7 @@
-#%%
-
-# IMPORTS
-
+# ============================================================
+# DETECÇÃO DE FRAUDE EM CARTÃO DE CRÉDITO
+# Versão Atualizada com Dataset Real do Kaggle
+# ============================================================
 
 import pandas as pd
 import numpy as np
@@ -16,8 +16,6 @@ import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from imblearn.pipeline import Pipeline
-
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
@@ -28,7 +26,8 @@ from sklearn.metrics import (
     precision_score,
     f1_score,
     roc_auc_score,
-    precision_recall_curve
+    precision_recall_curve,
+    average_precision_score
 )
 
 # Imbalanced learning
@@ -37,441 +36,345 @@ from imblearn.over_sampling import SMOTE
 # XGBoost
 from xgboost import XGBClassifier
 
-# Métrica essencial para fraude
-from sklearn.metrics import average_precision_score
+import warnings
+warnings.filterwarnings('ignore')
 
-#%%
+# ============================================================
+# CONFIGURAÇÃO DO MLFLOW
+# ============================================================
+
 MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
-EXPERIMENT_NAME = "credit-card-fraud-detection"
+EXPERIMENT_NAME = "../data/creditcard.csv"
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment(EXPERIMENT_NAME)
 
-#%%
+print("="*60)
+print("DETECÇÃO DE FRAUDE EM CARTÃO DE CRÉDITO")
+print("Dataset: Kaggle Real Credit Card Fraud")
+print("="*60)
+
 # ============================================================
-# CARREGAMENTO DO DATASET
+# CARREGAMENTO DO DATASET REAL
 # ============================================================
-# Dataset sintético de transações de cartão de crédito
 
-from pathlib import Path
+print("\n📥 Carregando dataset...")
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_PATH = BASE_DIR / "data" / "credit_card_fraud_synthetic.csv"
+# DATASET REAL DO KAGGLE
+df = pd.read_csv("../data/creditcard.csv")
 
-df = pd.read_csv(DATA_PATH)
-#%%
-df.shape
-df.info()
-#%%
-df['Class'].value_counts()
-df['Class'].value_counts(normalize=True)
 
-# O dataset apresenta severo desbalanceamento entre classes, 
-# exigindo técnicas específicas de avaliação e balanceamento para evitar modelos enviesados.
+print(f"✅ Dataset carregado!")
+print(f"   Shape: {df.shape}")
+print(f"   Colunas: {df.columns.tolist()}")
 
-#%% EXPLORE
-# 1. Distribuição da variável alvo
-print(df["Class"].value_counts(normalize=True))
+# ============================================================
+# ANÁLISE EXPLORATÓRIA RÁPIDA
+# ============================================================
 
-sns.countplot(x="Class", data=df)
-plt.title("Distribuição das Classes")
-plt.show()
+print("\n" + "="*60)
+print("ANÁLISE EXPLORATÓRIA")
+print("="*60)
 
-# 2. Amount por classe
-sns.boxplot(x="Class", y="Amount", data=df)
-plt.title("Amount por Classe")
-plt.show()
+print(f"\n📊 Distribuição das Classes:")
+print(df['Class'].value_counts())
+print(f"\nProporção de fraudes: {df['Class'].mean():.4%}")
 
-# 3. Distribuição temporal
-sns.histplot(df["Time"], bins=50)
-plt.title("Distribuição de Time")
-plt.show()
-#%% MODIFY
-# separando features e target
+print(f"\n📈 Estatísticas de Amount:")
+print(df.groupby('Class')['Amount'].describe())
+
+# Verificar valores nulos
+print(f"\n🔍 Valores nulos: {df.isnull().sum().sum()}")
+
+# ============================================================
+# PREPARAÇÃO DOS DADOS
+# ============================================================
+
+print("\n" + "="*60)
+print("PREPARAÇÃO DOS DADOS")
+print("="*60)
+
+# Separar features e target
 X = df.drop('Class', axis=1)
 y = df['Class']
 
-X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size = 0.2,
-                                                      random_state = 42,
-                                                      stratify = y)
+print(f"\nFeatures shape: {X.shape}")
+print(f"Target shape: {y.shape}")
 
-# A separação dos dados foi realizada antes de qualquer transformação para evitar vazamento de dados
-
-#%% MODEL
-
-# Treinamento da Regressão Logística sem balanceamento.
-pipe_log_base = Pipeline(steps=[
-    ('scaler', StandardScaler()),
-    ('model', LogisticRegression(
-        random_state=42,
-        max_iter=1000
-    ))
-])
-# Treinamento da Regressão Logística com class_weight='balanced'.
-pipe_log_bal = Pipeline(steps=[
-    ('scaler', StandardScaler()),
-    ('model', LogisticRegression(
-        random_state=42,
-        max_iter=1000,
-        class_weight='balanced'
-    ))
-])
-
-# Treinamento da Regressão Logística com SMOTE.
-pipe_log_smote = Pipeline(steps=[
-    ('scaler', StandardScaler()),
-    ('smote', SMOTE(
-        random_state=42,
-        sampling_strategy=0.5
-    )),
-    ('model', LogisticRegression(
-        random_state=42,
-        max_iter=1000
-    ))
-])
-# Treinamento do Random Forest sem balanceamento.
-pipe_rf_base = Pipeline(steps=[
-    ('model', RandomForestClassifier(
-        random_state=42,
-        n_estimators=200
-    ))
-])
-
-# Treinamento do Random Forest com class_weight='balanced'.
-pipe_rf_bal = Pipeline(steps=[
-    ('model', RandomForestClassifier(
-        random_state=42,
-        n_estimators=200,
-        class_weight='balanced'
-    ))
-])
-# Treinamento do Random Forest com SMOTE.
-pipe_rf_smote = Pipeline(steps=[
-    ('smote', SMOTE(
-        random_state=42,
-        sampling_strategy=0.5
-    )),
-    ('model', RandomForestClassifier(
-        random_state=42,
-        n_estimators=200
-    ))
-])
-# Treinamento do Gradient Boosting como modelo adicional
-# para comparação de desempenho.
-gb_model = GradientBoostingClassifier(
-    random_state=42
+# Split train/test com stratify
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, 
+    test_size=0.2,
+    random_state=42,
+    stratify=y
 )
 
-# XGBOOST — CHALLENGER
+print(f"\n📦 Split realizado:")
+print(f"   Train: {X_train.shape[0]:,} amostras")
+print(f"   Test:  {X_test.shape[0]:,} amostras")
+print(f"   Fraudes no train: {y_train.sum()} ({y_train.mean():.4%})")
+print(f"   Fraudes no test:  {y_test.sum()} ({y_test.mean():.4%})")
 
-# cálculo do scale_pos_weight (fundamental para fraude)
+# ============================================================
+# DEFINIÇÃO DOS MODELOS
+# ============================================================
+
+print("\n" + "="*60)
+print("DEFINIÇÃO DOS MODELOS")
+print("="*60)
+
+# Cálculo do scale_pos_weight para XGBoost
 scale_pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
+print(f"\nscale_pos_weight para XGBoost: {scale_pos_weight:.1f}")
 
-pipe_xgb = Pipeline(steps=[
-    ('model', XGBClassifier(
-        n_estimators=300,
-        max_depth=6,
-        learning_rate=0.05,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        objective='binary:logistic',
-        eval_metric='aucpr',        # métrica correta para fraude
-        scale_pos_weight=scale_pos_weight,
-        random_state=42,
-        n_jobs=-1
-    ))
-])
-
-
-#%%# 
-# FUNÇÃO DE AVALIAÇÃO DO MODELO
-def evaluate_model(model, X_test, y_test, name):
-    y_pred = model.predict(X_test)
-
-    if not hasattr(model, "predict_proba"):
-        print(f"⚠️ Modelo {name} não possui predict_proba")
-        return None
-
-    y_proba = model.predict_proba(X_test)[:, 1]
-
-    print(f"\n{name}")
-    print(classification_report(y_test, y_pred))
-    print("Recall Fraude:", recall_score(y_test, y_pred))
-    print("ROC-AUC:", roc_auc_score(y_test, y_proba))
-
-    return y_proba
-
-# FUNÇÃO PARA AVALIAR THRESHOLDS
-
-def avaliar_thresholds(y_true, y_proba, thresholds, model_name):
-    resultados = []
-
-    for t in thresholds:
-        y_pred = (y_proba >= t).astype(int)
-
-        resultados.append({
-            "Modelo": model_name,
-            "Threshold": t,
-            "Recall": recall_score(y_true, y_pred),
-            "Precision": precision_score(y_true, y_pred),
-            "F1": f1_score(y_true, y_pred)
-        })
-
-    return pd.DataFrame(resultados)
+# Dicionário de modelos
 models = {
-    "Logística — Baseline": pipe_log_base,
-    "Logística — class_weight": pipe_log_bal,
-    "Logística — SMOTE": pipe_log_smote,
-    "Random Forest — Baseline": pipe_rf_base,
-    "Random Forest — class_weight": pipe_rf_bal,
-    "Random Forest — SMOTE": pipe_rf_smote
+    "LogReg - Baseline": Pipeline([
+        ('scaler', StandardScaler()),
+        ('model', LogisticRegression(random_state=42, max_iter=1000))
+    ]),
+    
+    "LogReg - class_weight": Pipeline([
+        ('scaler', StandardScaler()),
+        ('model', LogisticRegression(
+            random_state=42, 
+            max_iter=1000,
+            class_weight='balanced'
+        ))
+    ]),
+    
+    "LogReg - SMOTE": Pipeline([
+        ('scaler', StandardScaler()),
+        ('smote', SMOTE(random_state=42, sampling_strategy=0.5)),
+        ('model', LogisticRegression(random_state=42, max_iter=1000))
+    ]),
+    
+    "RF - class_weight": Pipeline([
+        ('model', RandomForestClassifier(
+            n_estimators=100,
+            max_depth=10,
+            random_state=42,
+            class_weight='balanced',
+            n_jobs=-1
+        ))
+    ]),
+    
+    "XGBoost": Pipeline([
+        ('scaler', StandardScaler()),
+        ('model', XGBClassifier(
+            n_estimators=100,
+            max_depth=6,
+            learning_rate=0.1,
+            scale_pos_weight=scale_pos_weight,
+            random_state=42,
+            n_jobs=-1,
+            eval_metric='aucpr'
+        ))
+    ])
 }
 
-# Treinamento e avaliação dos modelos
+# ============================================================
+# TREINAMENTO E AVALIAÇÃO
+# ============================================================
 
-#%% 
-thresholds_testados = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1]
+print("\n" + "="*60)
+print("TREINAMENTO DOS MODELOS")
+print("="*60)
 
-def run_mlflow_experiment_with_thresholds(
-    model,
-    model_name,
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    thresholds
-):
-    # RUN PAI
-    with mlflow.start_run(run_name=model_name):
+results = []
+thresholds = [0.01, 0.05, 0.1, 0.3, 0.5]
 
-        model.fit(X_train, y_train)
-        y_proba = model.predict_proba(X_test)[:, 1]
-
-        for t in thresholds:
-            # RUN FILHO
-            with mlflow.start_run(
-                run_name=f"{model_name} | thr={t}",
-                nested=True
-            ):
-                y_pred = (y_proba >= t).astype(int)
-
-                mlflow.log_param("model", model_name)
-                mlflow.log_param("threshold", t)
-
-                mlflow.log_metric(
-                    "recall_fraude",
-                    recall_score(y_test, y_pred)
-                )
-                mlflow.log_metric(
-                    "precision_fraude",
-                    precision_score(y_test, y_pred, zero_division=0)
-                )
-                mlflow.log_metric(
-                    "f1_score",
-                    f1_score(y_test, y_pred)
-                )
-                mlflow.log_metric(
-                    "roc_auc",
-                    roc_auc_score(y_test, y_proba)
-                )
-                mlflow.log_metric(
-                    "pr_auc",
-                    average_precision_score(y_test, y_proba)
-                )
-
-                print(f"✔️ {model_name} | threshold={t}")
-
-
-# Executando experimentos para todos os modelos definidos
-mlflow_models = {
-    "LogReg - class_weight": pipe_log_bal,
-    "LogReg - SMOTE": pipe_log_smote,
-    "RF - class_weight": pipe_rf_bal,
-    "RF - SMOTE": pipe_rf_smote,
-    "Gradient Boosting": gb_model,
-     "XGBoost - Challenger": pipe_xgb
-}
-
-#%% 
-
-# Executando experimentos MLflow com diferentes thresholds
-for model_name, model in mlflow_models.items():
-    run_mlflow_experiment_with_thresholds(
-        model=model,
-        model_name=model_name,
-        X_train=X_train,
-        y_train=y_train,
-        X_test=X_test,
-        y_test=y_test,
-        thresholds=thresholds_testados
-    )
-#%% 
-# PRECISION × RECALL CURVE
-# Função para plotar curvas Precision × Recall
-def plot_precision_recall(models_dict, X_test, y_test):
-    plt.figure(figsize=(10, 7))
-
-    for name, model in models_dict.items():
-        y_proba = model.predict_proba(X_test)[:, 1]
-        precision, recall, _ = precision_recall_curve(y_test, y_proba)
-
-        plt.plot(recall, precision, label=name)
-
-    plt.xlabel("Recall (Fraude)")
-    plt.ylabel("Precision (Fraude)")
-    plt.title("Precision × Recall — Comparação dos Modelos")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-#%%
-models_pr = {
-    "LogReg - class_weight": pipe_log_bal,
-    "XGBoost": pipe_xgb
-}
-
-# FIT explícito dos modelos usados em gráfico
-pipe_log_bal.fit(X_train, y_train)
-pipe_xgb.fit(X_train, y_train)
-
-#%% 
-# Plotando a curva Precision × Recall para os modelos selecionados
-plot_precision_recall(models_pr, X_test, y_test)
-
-
-#%% CUSTO OPERACIONAL
-# Função para calcular o custo operacional baseado em FP e FN
-def calcular_custo_operacional(
-    model,
-    X_test,
-    y_test,
-    thresholds,
-    custo_fn=1000,
-    custo_fp=10
-):
-    resultados = []
-
+for model_name, model in models.items():
+    print(f"\n🔄 Treinando: {model_name}")
+    
+    # Treinar modelo
+    model.fit(X_train, y_train)
+    
+    # Predições
     y_proba = model.predict_proba(X_test)[:, 1]
-
-    for t in thresholds:
-        y_pred = (y_proba >= t).astype(int)
-
-        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
-
-        custo_total = (fn * custo_fn) + (fp * custo_fp)
-
-        resultados.append({
-            "threshold": t,
-            "FP": fp,
-            "FN": fn,
-            "custo_total": custo_total
+    
+    # Testar diferentes thresholds
+    for threshold in thresholds:
+        y_pred = (y_proba >= threshold).astype(int)
+        
+        # Calcular métricas
+        recall = recall_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred, zero_division=0)
+        f1 = f1_score(y_test, y_pred)
+        roc_auc = roc_auc_score(y_test, y_proba)
+        pr_auc = average_precision_score(y_test, y_proba)
+        
+        results.append({
+            'Model': model_name,
+            'Threshold': threshold,
+            'Recall': recall,
+            'Precision': precision,
+            'F1-Score': f1,
+            'ROC-AUC': roc_auc,
+            'PR-AUC': pr_auc
         })
+        
+        # Log no MLflow
+        with mlflow.start_run(run_name=f"{model_name} | thr={threshold}"):
+            mlflow.log_param("model", model_name)
+            mlflow.log_param("threshold", threshold)
+            mlflow.log_metric("recall", recall)
+            mlflow.log_metric("precision", precision)
+            mlflow.log_metric("f1_score", f1)
+            mlflow.log_metric("roc_auc", roc_auc)
+            mlflow.log_metric("pr_auc", pr_auc)
 
-    return pd.DataFrame(resultados)
+# ============================================================
+# RESULTADOS
+# ============================================================
 
-thresholds_testados = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1]
+print("\n" + "="*60)
+print("RESULTADOS CONSOLIDADOS")
+print("="*60)
 
-custo_logreg = calcular_custo_operacional(
-    model=pipe_log_bal,
-    X_test=X_test,
-    y_test=y_test,
-    thresholds=thresholds_testados
-)
+df_results = pd.DataFrame(results)
 
-custo_logreg["modelo"] = "LogReg - class_weight"
+# Encontrar melhor combinação para cada métrica
+print("\n🏆 MELHORES RESULTADOS:")
 
-custo_xgb = calcular_custo_operacional(
-    model=pipe_xgb,
-    X_test=X_test,
-    y_test=y_test,
-    thresholds=thresholds_testados
-)
+best_recall = df_results.loc[df_results['Recall'].idxmax()]
+print(f"\nMelhor Recall: {best_recall['Recall']:.2%}")
+print(f"  Modelo: {best_recall['Model']}")
+print(f"  Threshold: {best_recall['Threshold']}")
+print(f"  Precision: {best_recall['Precision']:.2%}")
+print(f"  F1-Score: {best_recall['F1-Score']:.4f}")
 
-custo_xgb["modelo"] = "XGBoost"
-#%%
-df_custo = pd.concat([custo_logreg, custo_xgb], ignore_index=True)
-#%%
-plt.figure(figsize=(10, 6))
+best_f1 = df_results.loc[df_results['F1-Score'].idxmax()]
+print(f"\nMelhor F1-Score: {best_f1['F1-Score']:.4f}")
+print(f"  Modelo: {best_f1['Model']}")
+print(f"  Threshold: {best_f1['Threshold']}")
+print(f"  Recall: {best_f1['Recall']:.2%}")
+print(f"  Precision: {best_f1['Precision']:.2%}")
 
-for modelo in df_custo["modelo"].unique():
-    subset = df_custo[df_custo["modelo"] == modelo]
-    plt.plot(
-        subset["threshold"],
-        subset["custo_total"],
-        marker="o",
-        label=modelo
-    )
+best_roc = df_results.loc[df_results['ROC-AUC'].idxmax()]
+print(f"\nMelhor ROC-AUC: {best_roc['ROC-AUC']:.4f}")
+print(f"  Modelo: {best_roc['Model']}")
 
-plt.xlabel("Threshold")
-plt.ylabel("Custo Operacional Total (R$)")
-plt.title("Custo Operacional × Threshold — Comparação de Modelos")
-plt.legend()
-plt.grid(True)
+# Salvar resultados
+df_results.to_csv('model_comparison_results.csv', index=False)
+print("\n✅ Resultados salvos em: model_comparison_results.csv")
+
+# ============================================================
+# MODELO FINAL PARA PRODUÇÃO
+# ============================================================
+
+print("\n" + "="*60)
+print("MODELO DE PRODUÇÃO")
+print("="*60)
+
+# Escolher melhor modelo (maior F1-Score)
+best_model_name = best_f1['Model']
+best_threshold = best_f1['Threshold']
+
+print(f"\n🎯 Modelo selecionado: {best_model_name}")
+print(f"   Threshold: {best_threshold}")
+
+# Retreinar modelo escolhido
+final_model = models[best_model_name]
+final_model.fit(X_train, y_train)
+
+# Predições finais
+y_proba_final = final_model.predict_proba(X_test)[:, 1]
+y_pred_final = (y_proba_final >= best_threshold).astype(int)
+
+# Métricas finais
+print("\n📊 MÉTRICAS FINAIS:")
+print(f"   Recall:    {recall_score(y_test, y_pred_final):.2%}")
+print(f"   Precision: {precision_score(y_test, y_pred_final):.2%}")
+print(f"   F1-Score:  {f1_score(y_test, y_pred_final):.4f}")
+print(f"   ROC-AUC:   {roc_auc_score(y_test, y_proba_final):.4f}")
+print(f"   PR-AUC:    {average_precision_score(y_test, y_proba_final):.4f}")
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred_final)
+print(f"\n📋 CONFUSION MATRIX:")
+print(f"   True Negatives:  {cm[0,0]:,}")
+print(f"   False Positives: {cm[0,1]:,}")
+print(f"   False Negatives: {cm[1,0]}")
+print(f"   True Positives:  {cm[1,1]}")
+
+# Análise de custo
+custo_fn = 1000  # custo de perder uma fraude
+custo_fp = 10    # custo de bloquear cliente legítimo
+custo_total = (cm[1,0] * custo_fn) + (cm[0,1] * custo_fp)
+
+print(f"\n💰 IMPACTO DE NEGÓCIO:")
+print(f"   Fraudes detectadas: {cm[1,1]} de {cm[1,1] + cm[1,0]}")
+print(f"   Taxa de detecção: {cm[1,1]/(cm[1,1] + cm[1,0]):.1%}")
+print(f"   Custo operacional: R$ {custo_total:,.2f}")
+
+# ============================================================
+# VISUALIZAÇÕES
+# ============================================================
+
+print("\n" + "="*60)
+print("GERANDO VISUALIZAÇÕES")
+print("="*60)
+
+# Criar pasta para plots
+from pathlib import Path
+Path("plots").mkdir(exist_ok=True)
+
+# 1. Comparação de modelos por threshold
+fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+
+for model in df_results['Model'].unique():
+    data = df_results[df_results['Model'] == model]
+    axes[0, 0].plot(data['Threshold'], data['Recall'], marker='o', label=model)
+    axes[0, 1].plot(data['Threshold'], data['Precision'], marker='s', label=model)
+    axes[1, 0].plot(data['Threshold'], data['F1-Score'], marker='^', label=model)
+    axes[1, 1].plot(data['Threshold'], data['ROC-AUC'], marker='d', label=model)
+
+axes[0, 0].set_title('Recall vs Threshold', fontsize=14, weight='bold')
+axes[0, 0].set_xlabel('Threshold')
+axes[0, 0].set_ylabel('Recall')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+axes[0, 1].set_title('Precision vs Threshold', fontsize=14, weight='bold')
+axes[0, 1].set_xlabel('Threshold')
+axes[0, 1].set_ylabel('Precision')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+axes[1, 0].set_title('F1-Score vs Threshold', fontsize=14, weight='bold')
+axes[1, 0].set_xlabel('Threshold')
+axes[1, 0].set_ylabel('F1-Score')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+axes[1, 1].set_title('ROC-AUC vs Threshold', fontsize=14, weight='bold')
+axes[1, 1].set_xlabel('Threshold')
+axes[1, 1].set_ylabel('ROC-AUC')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('plots/model_comparison.png', dpi=300, bbox_inches='tight')
+print("✅ Gráfico salvo: plots/model_comparison.png")
+
+# 2. Confusion Matrix
+plt.figure(figsize=(10, 8))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar_kws={'label': 'Count'})
+plt.title(f'Confusion Matrix - {best_model_name}\nThreshold: {best_threshold}', 
+          fontsize=16, weight='bold')
+plt.ylabel('Actual', fontsize=13)
+plt.xlabel('Predicted', fontsize=13)
+plt.tight_layout()
+plt.savefig('plots/confusion_matrix.png', dpi=300, bbox_inches='tight')
+print("✅ Gráfico salvo: plots/confusion_matrix.png")
+
 plt.show()
 
-#%% MODEL FINAL PARA PRODUÇÃO
-# Definição do threshold para produção baseado na análise de custo operacional
-
-from pathlib import Path
-import joblib
-
-best_model = pipe_log_bal
-best_threshold = 0.1
-
-FEATURE_COLUMNS = X_train.columns.tolist()
-
-Path("artifacts").mkdir(exist_ok=True)
-joblib.dump(FEATURE_COLUMNS, "artifacts/feature_columns.pkl")
-
-
-# RUN DE PRODUÇÃO
-
-with mlflow.start_run(run_name="Production | LogReg class_weight"):
-
-    best_model.fit(X_train, y_train)
-
-    y_proba = best_model.predict_proba(X_test)[:, 1]
-    y_pred = (y_proba >= best_threshold).astype(int)
-
-    # ===== MÉTRICAS =====
-    mlflow.log_metric("recall_fraude", recall_score(y_test, y_pred))
-    mlflow.log_metric("precision_fraude", precision_score(y_test, y_pred))
-    mlflow.log_metric("f1_score", f1_score(y_test, y_pred))
-    mlflow.log_metric("roc_auc", roc_auc_score(y_test, y_proba))
-    mlflow.log_metric("pr_auc", average_precision_score(y_test, y_proba))
-
-    # ===== PARÂMETROS =====
-    mlflow.log_param("model", "LogisticRegression")
-    mlflow.log_param("class_weight", "balanced")
-    mlflow.log_param("threshold", best_threshold)
-
-    # ===== REGISTRO DO MODELO =====
-    mlflow.sklearn.log_model(
-        best_model,
-        artifact_path="model",
-        registered_model_name="fraud_detection_model"
-    )
-
-    # ===== REGISTRAR SCHEMA =====
-    mlflow.log_artifact(
-        "artifacts/feature_columns.pkl",
-        artifact_path="schema"
-    )
-
-    # ===== REGISTRAR GRÁFICOS =====
-    plt.savefig("precision_recall.png")
-    mlflow.log_artifact("precision_recall.png", artifact_path="plots")
-
-    ARTIFACTS_DIR = Path("artifacts")
-ARTIFACTS_DIR.mkdir(exist_ok=True)
-
-feature_columns = X.columns.tolist()
-
-joblib.dump(
-    feature_columns,
-    ARTIFACTS_DIR / "feature_columns.pkl"
-)
-
-print("✅ feature_columns.pkl salvo com sucesso")
-
-
-
+print("\n" + "="*60)
+print("PROCESSO CONCLUÍDO!")
+print("="*60)
+print("\n✅ Todos os resultados foram salvos")
+print("✅ Verifique a pasta 'plots/' para visualizações")
+print("✅ Verifique 'model_comparison_results.csv' para métricas")
+print("✅ Acesse o MLflow UI para explorar experimentos")

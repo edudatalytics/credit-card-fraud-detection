@@ -1,9 +1,12 @@
+import mlflow
 from mlflow.tracking import MlflowClient
+
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
 
 client = MlflowClient()
 
 MODEL_NAME = "fraud_detection_model"
-MODEL_VERSION = "1"   # sua versão boa
+MODEL_VERSION = "7"  # sua versão boa
 
 # cria/atualiza alias Production
 client.set_registered_model_alias(
